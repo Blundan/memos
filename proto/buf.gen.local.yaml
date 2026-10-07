@@ -1,0 +1,20 @@
+version: v2
+managed:
+  enabled: true
+  disable:
+    - file_option: go_package
+      module: buf.build/googleapis/googleapis
+  override:
+    - file_option: go_package_prefix
+      value: github.com/usememos/memos/proto/gen
+plugins:
+  - local: protoc-gen-go
+    out: gen
+    opt: paths=source_relative
+  - local:
+      - node
+      - C:/Users/15768/WorkBuddy/2026-10-07-21-16-17/toolkit/es/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es
+    out: ../web/src/types/proto
+    opt:
+      - target=ts
+    include_imports: true

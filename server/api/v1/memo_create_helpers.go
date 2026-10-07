@@ -75,6 +75,17 @@ func (s *APIV1Service) prepareMemoCreate(ctx context.Context, user *store.User, 
 	if input.Location != nil {
 		memo.Payload.Location = convertLocationToStore(input.Location)
 	}
+	// Campus lost-and-found fields: item lifecycle status and anonymous flag.
+	if input.ItemStatus != nil {
+		itemStatus, err := validateItemStatus(input.GetItemStatus())
+		if err != nil {
+			return nil, err
+		}
+		memo.Payload.ItemStatus = itemStatus
+	}
+	if input.GetIsAnonymous() {
+		memo.Payload.IsAnonymous = true
+	}
 
 	attachments, err := s.prepareMemoAttachments(ctx, user, memo, input.Attachments)
 	if err != nil {

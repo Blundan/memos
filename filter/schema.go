@@ -34,8 +34,11 @@ const (
 	FieldKindBoolColumn FieldKind = "bool_column"
 	FieldKindJSONBool   FieldKind = "json_bool"
 	// FieldKindJSONExists represents a boolean derived from the presence of a non-null JSON value.
-	FieldKindJSONExists   FieldKind = "json_exists"
-	FieldKindJSONList     FieldKind = "json_list"
+	FieldKindJSONExists FieldKind = "json_exists"
+	FieldKindJSONList   FieldKind = "json_list"
+	// FieldKindJSONString represents a string stored inside a JSON column at a
+	// fixed path (e.g. the memo payload).
+	FieldKindJSONString   FieldKind = "json_string"
 	FieldKindVirtualAlias FieldKind = "virtual_alias"
 )
 
@@ -254,6 +257,29 @@ func NewSchema() Schema {
 				CompareNeq: true,
 			},
 		},
+		// Campus lost-and-found: the lifecycle status of the item
+		// (LOST / FOUND / RESOLVED) stored in the memo payload.
+		"item_status": {
+			Name:     "item_status",
+			Kind:     FieldKindJSONString,
+			Type:     FieldTypeString,
+			Column:   Column{Table: "memo", Name: "payload"},
+			JSONPath: []string{"itemStatus"},
+			AllowedComparisonOps: map[ComparisonOperator]bool{
+				CompareEq:  true,
+				CompareNeq: true,
+			},
+		},
+		// Campus lost-and-found: the human-readable place (e.g. "图书馆3楼")
+		// stored in the memo payload's location placeholder.
+		"location": {
+			Name:             "location",
+			Kind:             FieldKindJSONString,
+			Type:             FieldTypeString,
+			Column:           Column{Table: "memo", Name: "payload"},
+			JSONPath:         []string{"location", "placeholder"},
+			SupportsContains: true,
+		},
 	}
 
 	envOptions := []cel.EnvOption{
@@ -273,6 +299,8 @@ func NewSchema() Schema {
 		cel.Variable("has_code", cel.BoolType),
 		cel.Variable("has_incomplete_tasks", cel.BoolType),
 		cel.Variable("has_location", cel.BoolType),
+		cel.Variable("item_status", cel.StringType),
+		cel.Variable("location", cel.StringType),
 		cel.Variable("now", cel.TimestampType),
 		ext.Sets(),
 		cel.ASTValidators(cel.ValidateRegexLiterals()),

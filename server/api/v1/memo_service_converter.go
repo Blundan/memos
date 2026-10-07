@@ -23,15 +23,41 @@ var (
 	errReactionCreatorNotFound = stderrors.New("reaction creator not found")
 )
 
+// Campus lost-and-found item lifecycle statuses.
+const (
+	ItemStatusLost     = "LOST"
+	ItemStatusFound    = "FOUND"
+	ItemStatusResolved = "RESOLVED"
+)
+
+// AnonymousCreatorName is the resource name reported as the creator of an
+// anonymous post when the viewer is neither the creator nor an admin.
+const AnonymousCreatorName = "users/anonymous"
+
+// validateItemStatus accepts an empty status (ordinary memo) or one of the
+// campus lost-and-found lifecycle values.
+func validateItemStatus(itemStatus string) (string, error) {
+	switch itemStatus {
+	case "", ItemStatusLost, ItemStatusFound, ItemStatusResolved:
+		return itemStatus, nil
+	default:
+		return "", status.Errorf(codes.InvalidArgument, "invalid item status %q (expected LOST, FOUND or RESOLVED)", itemStatus)
+	}
+}
+
 func (s *APIV1Service) convertMemoFromStore(ctx context.Context, memo *store.Memo, reactions []*store.Reaction, attachments []*store.Attachment, relations []*v1pb.MemoRelation) (*v1pb.Memo, error) {
 	creatorMap, err := s.listUsersByID(ctx, []int32{memo.CreatorID})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list memo creators")
 	}
-	return s.convertMemoFromStoreWithCreators(ctx, memo, reactions, attachments, relations, creatorMap)
+	viewer, err := s.fetchCurrentUser(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current user")
+	}
+	return s.convertMemoFromStoreWithCreators(ctx, memo, reactions, attachments, relations, creatorMap, viewer)
 }
 
-func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, memo *store.Memo, reactions []*store.Reaction, attachments []*store.Attachment, relations []*v1pb.MemoRelation, creatorMap map[int32]*store.User) (*v1pb.Memo, error) {
+func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, memo *store.Memo, reactions []*store.Reaction, attachments []*store.Attachment, relations []*v1pb.MemoRelation, creatorMap map[int32]*store.User, viewer *store.User) (*v1pb.Memo, error) {
 	name := buildMemoName(memo.UID)
 	creator := creatorMap[memo.CreatorID]
 	if creator == nil {
@@ -64,6 +90,19 @@ func (s *APIV1Service) convertMemoFromStoreWithCreators(ctx context.Context, mem
 		memoMessage.Tags = memo.Payload.Tags
 		memoMessage.Property = convertMemoPropertyFromStore(memo.Payload.Property)
 		memoMessage.Location = convertLocationFromStore(memo.Payload.Location)
+		// Campus lost-and-found fields.
+		if memo.Payload.ItemStatus != "" {
+			itemStatus := memo.Payload.ItemStatus
+			memoMessage.ItemStatus = &itemStatus
+		}
+		if memo.Payload.IsAnonymous {
+			memoMessage.IsAnonymous = &memo.Payload.IsAnonymous
+			// Hide the creator's identity from anyone other than the creator
+			// themselves or an instance admin.
+			if viewer == nil || (viewer.ID != memo.CreatorID && !access.IsInstanceAdmin(viewer)) {
+				memoMessage.Creator = AnonymousCreatorName
+			}
+		}
 	}
 
 	// Parent identity is part of a readable comment's context. It grants no

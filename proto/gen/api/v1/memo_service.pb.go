@@ -257,7 +257,13 @@ type Memo struct {
 	Location *Location `protobuf:"bytes,18,opt,name=location,proto3,oneof" json:"location,omitempty"`
 	// Optional. The space in which this memo is placed. Format: spaces/{space}.
 	// Every memo, including a comment, owns its placement independently.
-	Space         *string `protobuf:"bytes,19,opt,name=space,proto3,oneof" json:"space,omitempty"`
+	Space *string `protobuf:"bytes,19,opt,name=space,proto3,oneof" json:"space,omitempty"`
+	// Optional. Campus lost-and-found item status.
+	// One of "LOST", "FOUND", "RESOLVED". Empty for ordinary memos.
+	ItemStatus *string `protobuf:"bytes,20,opt,name=item_status,json=itemStatus,proto3,oneof" json:"item_status,omitempty"`
+	// Optional. Campus lost-and-found anonymous posting.
+	// When true, the creator's identity is hidden from other regular users.
+	IsAnonymous   *bool `protobuf:"varint,21,opt,name=is_anonymous,json=isAnonymous,proto3,oneof" json:"is_anonymous,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -411,6 +417,20 @@ func (x *Memo) GetSpace() string {
 	return ""
 }
 
+func (x *Memo) GetItemStatus() string {
+	if x != nil && x.ItemStatus != nil {
+		return *x.ItemStatus
+	}
+	return ""
+}
+
+func (x *Memo) GetIsAnonymous() bool {
+	if x != nil && x.IsAnonymous != nil {
+		return *x.IsAnonymous
+	}
+	return false
+}
+
 type Location struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// A placeholder text for the location.
@@ -553,24 +573,21 @@ type ListMemosRequest struct {
 	OrderBy string `protobuf:"bytes,4,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
 	// Optional. A CEL expression to filter memos. Combine terms with && and ||.
 	// Available fields:
-	//
-	//	content (string), creator (string, e.g. "users/1"),
-	//	created_ts / updated_ts (timestamp), pinned (bool),
-	//	visibility (string: PRIVATE | PROTECTED | PUBLIC | SPACE),
-	//	space (string resource name, or null when the memo has no space;
-	//	  supports == and comparisons against null, e.g. space != null),
-	//	tags (list<string>; match with `"work" in tags`, not `tag == "work"`),
-	//	has_task_list / has_link / has_code / has_incomplete_tasks (bool),
-	//	has_location (bool; true when the memo has a location attached).
-	//
+	//   content (string), creator (string, e.g. "users/1"),
+	//   created_ts / updated_ts (timestamp), pinned (bool),
+	//   visibility (string: PRIVATE | PROTECTED | PUBLIC | SPACE),
+	//   space (string resource name, or null when the memo has no space;
+	//     supports == and comparisons against null, e.g. space != null),
+	//   tags (list<string>; match with `"work" in tags`, not `tag == "work"`),
+	//   has_task_list / has_link / has_code / has_incomplete_tasks (bool),
+	//   has_location (bool; true when the memo has a location attached).
 	// Note: the time fields here are created_ts / updated_ts, which differ from
 	// the create_time / update_time names used by order_by.
 	// Examples:
-	//
-	//	pinned == true && visibility == "PUBLIC"
-	//	space == "spaces/team" or space == null
-	//	tags.exists(t, t == "urgent")
-	//	content.contains("roadmap") && created_ts > now - duration("168h")
+	//   pinned == true && visibility == "PUBLIC"
+	//   space == "spaces/team" or space == null
+	//   tags.exists(t, t == "urgent")
+	//   content.contains("roadmap") && created_ts > now - duration("168h")
 	Filter string `protobuf:"bytes,5,opt,name=filter,proto3" json:"filter,omitempty"`
 	// Optional. If true, show deleted memos in the response.
 	ShowDeleted   bool `protobuf:"varint,6,opt,name=show_deleted,json=showDeleted,proto3" json:"show_deleted,omitempty"`
@@ -2336,7 +2353,7 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\vcreate_time\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime:X\xeaAU\n" +
 	"\x15memos.api.v1/Reaction\x12!memos/{memo}/reactions/{reaction}\x1a\x04name*\treactions2\breactionJ\x04\b\x03\x10\x04R\n" +
-	"content_id\"\xff\b\n" +
+	"content_id\"\xf8\t\n" +
 	"\x04Memo\x12\x17\n" +
 	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12.\n" +
 	"\x05state\x18\x02 \x01(\x0e2\x13.memos.api.v1.StateB\x03\xe0A\x02R\x05state\x123\n" +
@@ -2362,7 +2379,10 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\asnippet\x18\x11 \x01(\tB\x03\xe0A\x03R\asnippet\x12<\n" +
 	"\blocation\x18\x12 \x01(\v2\x16.memos.api.v1.LocationB\x03\xe0A\x01H\x01R\blocation\x88\x01\x01\x125\n" +
 	"\x05space\x18\x13 \x01(\tB\x1a\xe0A\x01\xfaA\x14\n" +
-	"\x12memos.api.v1/SpaceH\x02R\x05space\x88\x01\x01\x1a\xac\x01\n" +
+	"\x12memos.api.v1/SpaceH\x02R\x05space\x88\x01\x01\x12)\n" +
+	"\vitem_status\x18\x14 \x01(\tB\x03\xe0A\x01H\x03R\n" +
+	"itemStatus\x88\x01\x01\x12+\n" +
+	"\fis_anonymous\x18\x15 \x01(\bB\x03\xe0A\x01H\x04R\visAnonymous\x88\x01\x01\x1a\xac\x01\n" +
 	"\bProperty\x12\x19\n" +
 	"\bhas_link\x18\x01 \x01(\bR\ahasLink\x12\"\n" +
 	"\rhas_task_list\x18\x02 \x01(\bR\vhasTaskList\x12\x19\n" +
@@ -2372,7 +2392,9 @@ const file_api_v1_memo_service_proto_rawDesc = "" +
 	"\x11memos.api.v1/Memo\x12\fmemos/{memo}\x1a\x04name*\x05memos2\x04memoB\t\n" +
 	"\a_parentB\v\n" +
 	"\t_locationB\b\n" +
-	"\x06_spaceJ\x04\b\x06\x10\aR\fdisplay_time\"u\n" +
+	"\x06_spaceB\x0e\n" +
+	"\f_item_statusB\x0f\n" +
+	"\r_is_anonymousJ\x04\b\x06\x10\aR\fdisplay_time\"u\n" +
 	"\bLocation\x12%\n" +
 	"\vplaceholder\x18\x01 \x01(\tB\x03\xe0A\x01R\vplaceholder\x12\x1f\n" +
 	"\blatitude\x18\x02 \x01(\x01B\x03\xe0A\x01R\blatitude\x12!\n" +

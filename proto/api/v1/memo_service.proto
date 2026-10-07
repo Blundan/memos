@@ -281,6 +281,14 @@ message Memo {
     (google.api.resource_reference) = {type: "memos.api.v1/Space"}
   ];
 
+  // Optional. Campus lost-and-found item status.
+  // One of "LOST", "FOUND", "RESOLVED". Empty for ordinary memos.
+  optional string item_status = 20 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional. Campus lost-and-found anonymous posting.
+  // When true, the creator's identity is hidden from other regular users.
+  optional bool is_anonymous = 21 [(google.api.field_behavior) = OPTIONAL];
+
   // Computed properties of a memo.
   message Property {
     bool has_link = 1;

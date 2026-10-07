@@ -170,6 +170,8 @@ func (r *renderer) renderComparison(cond *ComparisonCondition) (renderResult, er
 			return r.renderJSONExistsComparison(field, cond.Operator, cond.Right)
 		case FieldKindScalar:
 			return r.renderScalarComparison(field, cond.Operator, cond.Right)
+		case FieldKindJSONString:
+			return r.renderJSONStringComparison(field, cond.Operator, cond.Right)
 		default:
 			return renderResult{}, errors.Errorf("field %q does not support comparison", field.Name)
 		}
@@ -350,6 +352,36 @@ func (r *renderer) renderScalarComparison(field Field, op ComparisonOperator, ri
 	}, nil
 }
 
+// renderJSONStringComparison compares a string stored at a fixed path inside a
+// JSON column (e.g. the memo payload) with a literal. A missing key and an
+// explicit JSON null both fold to SQL NULL on every dialect, so `== null` and
+// `!= null` also work.
+func (r *renderer) renderJSONStringComparison(field Field, op ComparisonOperator, right ValueExpr) (renderResult, error) {
+	lit, err := expectLiteral(right)
+	if err != nil {
+		return renderResult{}, err
+	}
+	expr := jsonExtractExpr(r.dialect, field)
+	if lit == nil {
+		switch op {
+		case CompareEq:
+			return renderResult{sql: fmt.Sprintf("%s IS NULL", expr)}, nil
+		case CompareNeq:
+			return renderResult{sql: fmt.Sprintf("%s IS NOT NULL", expr)}, nil
+		default:
+			return renderResult{}, errors.Errorf("operator %s not supported for null comparison", op)
+		}
+	}
+	str, ok := lit.(string)
+	if !ok {
+		return renderResult{}, errors.Errorf("field %q expects string value", field.Name)
+	}
+	placeholder := r.addArg(str)
+	return renderResult{
+		sql: fmt.Sprintf("%s %s %s", expr, sqlOperator(op), placeholder),
+	}, nil
+}
+
 func (r *renderer) renderBoolColumnComparison(field Field, op ComparisonOperator, right ValueExpr) (renderResult, error) {
 	value, err := expectBool(right)
 	if err != nil {
@@ -393,11 +425,42 @@ func (r *renderer) renderInCondition(cond *InCondition) (renderResult, error) {
 		return renderResult{}, errors.Errorf("unknown field %q", fieldRef.Name)
 	}
 
+	if field.Kind == FieldKindJSONString {
+		return r.renderJSONStringInCondition(field, cond.Values)
+	}
+
 	if field.Kind != FieldKindScalar {
 		return renderResult{}, errors.Errorf("field %q does not support IN()", fieldRef.Name)
 	}
 
 	return r.renderScalarInCondition(field, cond.Values)
+}
+
+// renderJSONStringInCondition renders `field in ["a", "b"]` for a string
+// stored at a fixed path inside a JSON column.
+func (r *renderer) renderJSONStringInCondition(field Field, values []ValueExpr) (renderResult, error) {
+	placeholders := make([]string, 0, len(values))
+	for _, v := range values {
+		lit, err := expectLiteral(v)
+		if err != nil {
+			return renderResult{}, err
+		}
+		if lit == nil {
+			return renderResult{}, errors.Errorf("field %q does not support null in IN()", field.Name)
+		}
+		str, ok := lit.(string)
+		if !ok {
+			return renderResult{}, errors.Errorf("field %q expects string values", field.Name)
+		}
+		placeholders = append(placeholders, r.addArg(str))
+	}
+	if len(placeholders) == 0 {
+		return renderResult{sql: "1 = 0"}, nil
+	}
+	expr := jsonExtractExpr(r.dialect, field)
+	return renderResult{
+		sql: fmt.Sprintf("%s IN (%s)", expr, strings.Join(placeholders, ",")),
+	}, nil
 }
 
 func (r *renderer) renderTagInList(values []ValueExpr) (renderResult, error) {
@@ -497,7 +560,12 @@ func (r *renderer) renderTextMatch(cond *TextMatchCondition) (renderResult, erro
 	if !ok {
 		return renderResult{}, errors.Errorf("unknown field %q", cond.Field)
 	}
-	column := field.columnExpr(r.dialect)
+	var column string
+	if field.Kind == FieldKindJSONString {
+		column = jsonExtractExpr(r.dialect, field)
+	} else {
+		column = field.columnExpr(r.dialect)
+	}
 	pattern := likePattern(cond.Mode, cond.Value)
 	return renderResult{sql: r.foldedLike(column, pattern)}, nil
 }
@@ -507,7 +575,12 @@ func (r *renderer) renderRegex(cond *RegexCondition) (renderResult, error) {
 	if !ok {
 		return renderResult{}, errors.Errorf("unknown field %q", cond.Field)
 	}
-	column := field.columnExpr(r.dialect)
+	var column string
+	if field.Kind == FieldKindJSONString {
+		column = jsonExtractExpr(r.dialect, field)
+	} else {
+		column = field.columnExpr(r.dialect)
+	}
 	switch r.dialect {
 	case DialectPostgres:
 		// POSIX regex match operator.

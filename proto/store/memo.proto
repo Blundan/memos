@@ -11,6 +11,15 @@ message MemoPayload {
 
   repeated string tags = 3;
 
+  // Campus lost-and-found: the lifecycle status of the item.
+  // One of "LOST" (item reported lost), "FOUND" (item reported found),
+  // "RESOLVED" (owner and finder matched).
+  string item_status = 4;
+
+  // Campus lost-and-found: whether the post hides the creator's identity
+  // from other regular users (admins and the creator still see it).
+  bool is_anonymous = 5;
+
   // The calculated properties from the memo content.
   message Property {
     bool has_link = 1;
