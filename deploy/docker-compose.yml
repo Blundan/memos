@@ -1,0 +1,17 @@
+# CampusFound (校园寻物) — 一键部署
+#
+#   docker compose up -d --build
+#
+# 首次构建约需 5-10 分钟（编译前端+后端），之后启动只要几秒。
+# 数据保存在 ./campus-data 目录，卸载容器也不会丢失。
+services:
+  campusfound:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: campusfound
+    restart: unless-stopped
+    volumes:
+      - ./campus-data:/var/opt/campusfound
+    ports:
+      - "5230:5230"
