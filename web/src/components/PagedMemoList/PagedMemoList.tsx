@@ -17,6 +17,7 @@ import { State } from "@/types/proto/api/v1/common_pb";
 import type { Memo } from "@/types/proto/api/v1/memo_service_pb";
 import { useTranslate } from "@/utils/i18n";
 import ColumnGrid, { ColumnGridUntrappedProvider, columnCountForWidth, GRID_GAP } from "../ColumnGrid";
+import CampusFilters from "../CampusFound/CampusFilters";
 import MemoFilters from "../MemoFilters";
 import Placeholder from "../Placeholder";
 import MemoListError from "./MemoListError";
@@ -259,6 +260,7 @@ const PagedMemoList = (props: Props) => {
     leadingContent || hasFilters || initialLoader || emptyPlaceholder || initialError ? (
       <div className="flex w-full flex-col" style={{ gap: GRID_GAP }}>
         {leadingContent}
+        <CampusFilters filter={combineCELFilters(props.contextFilter, props.filter)} />
         <MemoFilters />
         {initialLoader}
         {initialError}
@@ -300,6 +302,7 @@ const PagedMemoList = (props: Props) => {
             <>
               {headerContent}
               {leadingContent}
+              <CampusFilters className="mb-1" filter={combineCELFilters(props.contextFilter, props.filter)} />
               <MemoFilters className="mb-2" />
               {initialLoader}
               {initialError}

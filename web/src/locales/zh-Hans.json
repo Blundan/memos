@@ -1007,5 +1007,35 @@
     "mode": "搜索模式",
     "syntax-help": "搜索语法",
     "text": "文本"
+  },
+  "campus": {
+    "status-lost": "寻物启事",
+    "status-found": "失物招领",
+    "status-resolved": "已寻回",
+    "action-lost": "我丢了东西",
+    "action-found": "我捡到了东西",
+    "action-resolved": "已寻回",
+    "anonymous": "匿名同学",
+    "post-anonymously": "匿名发布",
+    "anonymous-hint": "其他同学将看不到你的昵称（管理员仍可见，用于处理违规）",
+    "location-placeholder": "在哪里丢/捡到的？如：图书馆3楼",
+    "filter-all": "全部",
+    "filter-location-placeholder": "按地点搜索…",
+    "clear-location": "清除地点筛选",
+    "export-csv": "导出 CSV",
+    "export-csv-success": "已导出 {{count}} 条记录",
+    "export-csv-empty": "没有可导出的记录",
+    "export-csv-error": "导出失败，请重试",
+    "yes": "是",
+    "no": "否",
+    "csv": {
+      "id": "编号",
+      "created-at": "发布时间",
+      "status": "类型",
+      "location": "地点",
+      "content": "内容",
+      "creator": "发布者",
+      "anonymous": "是否匿名"
+    }
   }
 }

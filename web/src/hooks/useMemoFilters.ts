@@ -68,6 +68,16 @@ export const buildMemoFilter = ({
       conditions.push(`has_code`);
     } else if (filter.factor === "property.hasLocation") {
       conditions.push(`has_location`);
+    } else if (filter.factor === "campus.status") {
+      // Campus lost-and-found: item lifecycle status (LOST / FOUND / RESOLVED).
+      if (filter.value) {
+        conditions.push(`item_status == ${escapeFilterValue(filter.value)}`);
+      }
+    } else if (filter.factor === "campus.location") {
+      // Campus lost-and-found: substring match on the location placeholder.
+      if (filter.value.trim()) {
+        conditions.push(`location.contains(${escapeFilterValue(filter.value.trim())})`);
+      }
     } else if (filter.factor === "displayTime") {
       const range = getLocalDayTimestampRange(filter.value);
       if (range) {

@@ -6,6 +6,7 @@ import {
   CheckCircleIcon,
   CodeIcon,
   EyeIcon,
+  FlagIcon,
   HashIcon,
   LinkIcon,
   type LucideIcon,
@@ -78,6 +79,21 @@ const FILTER_CONFIGS: Record<FilterFactor, FilterConfig> = {
   "property.hasLocation": {
     icon: MapPinIcon,
     getLabel: (_, t) => t("memo.filters.has-location"),
+  },
+  "campus.status": {
+    icon: FlagIcon,
+    getLabel: (value, t) => {
+      const labels: Record<string, string> = {
+        LOST: t("campus.status-lost"),
+        FOUND: t("campus.status-found"),
+        RESOLVED: t("campus.status-resolved"),
+      };
+      return labels[value] ?? value;
+    },
+  },
+  "campus.location": {
+    icon: MapPinIcon,
+    getLabel: (value) => value,
   },
 };
 

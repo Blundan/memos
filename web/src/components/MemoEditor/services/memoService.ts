@@ -59,9 +59,18 @@ function buildUpdateMask(
     mask.add("location");
     patch.location = state.metadata.location;
   }
+  // Campus lost-and-found fields.
+  if ((state.metadata.itemStatus || "") !== (prevMemo.itemStatus || "")) {
+    mask.add("item_status");
+    patch.itemStatus = state.metadata.itemStatus ?? "";
+  }
+  if (state.metadata.isAnonymous !== Boolean(prevMemo.isAnonymous)) {
+    mask.add("is_anonymous");
+    patch.isAnonymous = state.metadata.isAnonymous;
+  }
 
   // Auto-update timestamp if content changed
-  if (["content", "attachments", "relations", "location"].some((key) => mask.has(key))) {
+  if (["content", "attachments", "relations", "location", "item_status", "is_anonymous"].some((key) => mask.has(key))) {
     mask.add("update_time");
   }
 
@@ -120,6 +129,8 @@ export const memoService = {
       attachments: toAttachmentReferences(allAttachments),
       relations: state.metadata.relations,
       location: state.metadata.location,
+      itemStatus: state.metadata.itemStatus,
+      isAnonymous: state.metadata.isAnonymous,
       createTime: state.timestamps.createTime ? timestampFromDate(state.timestamps.createTime) : undefined,
       updateTime: state.timestamps.updateTime ? timestampFromDate(state.timestamps.updateTime) : undefined,
       space: options.parentMemoName ? undefined : (options.space ?? state.metadata.space),
@@ -149,6 +160,8 @@ export const memoService = {
         attachments: memo.attachments,
         relations: memo.relations,
         location: memo.location,
+        itemStatus: memo.itemStatus || undefined,
+        isAnonymous: Boolean(memo.isAnonymous),
       },
       timestamps: {
         createTime: memo.createTime ? timestampDate(memo.createTime) : undefined,

@@ -1007,5 +1007,35 @@
   "tooltip": {
     "link-memo": "Link Memo",
     "select-location": "Location"
+  },
+  "campus": {
+    "status-lost": "Lost",
+    "status-found": "Found",
+    "status-resolved": "Resolved",
+    "action-lost": "I lost something",
+    "action-found": "I found something",
+    "action-resolved": "Reunited",
+    "anonymous": "Anonymous",
+    "post-anonymously": "Anonymous",
+    "anonymous-hint": "Your name is hidden from other users (admins can still see it)",
+    "location-placeholder": "Where? e.g. Library 3F",
+    "filter-all": "All",
+    "filter-location-placeholder": "Search location…",
+    "clear-location": "Clear location filter",
+    "export-csv": "Export CSV",
+    "export-csv-success": "Exported {{count}} records",
+    "export-csv-empty": "Nothing to export",
+    "export-csv-error": "Export failed, please retry",
+    "yes": "Yes",
+    "no": "No",
+    "csv": {
+      "id": "ID",
+      "created-at": "Created at",
+      "status": "Status",
+      "location": "Location",
+      "content": "Content",
+      "creator": "Creator",
+      "anonymous": "Anonymous"
+    }
   }
 }

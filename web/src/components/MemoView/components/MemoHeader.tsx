@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
+import { EyeOffIcon } from "lucide-react";
 import RelativeTime from "@/components/RelativeTime";
+import CampusStatusBadge from "@/components/CampusFound/CampusStatusBadge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FOCUS_VISIBLE_OUTLINE_CLASSES } from "@/components/ui/focus";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -64,6 +66,8 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ timeDisplay = "relative", showC
         {/* The time stays visible while the creator and Space badge can shrink and truncate. */}
         <div data-slot="memo-header-meta" className="flex min-w-0 items-center gap-1.5 overflow-hidden">
           {showCreator && creator && <CreatorDisplay creator={creator} />}
+          {showCreator && !creator && memo.isAnonymous && <AnonymousDisplay />}
+          {memo.itemStatus && <CampusStatusBadge status={memo.itemStatus} />}
           <TimeDisplay
             displayTime={displayTime}
             timeTooltip={timeTooltip}
@@ -104,12 +108,30 @@ const MemoHeader: React.FC<MemoHeaderProps> = ({ timeDisplay = "relative", showC
 };
 
 /**
+ * Campus lost-and-found anonymous posts: the server strips the creator's
+ * identity, so instead of a profile link the header shows a muted placeholder.
+ */
+const AnonymousDisplay: React.FC = () => {
+  const t = useTranslate();
+  return (
+    <>
+      <span className="flex shrink-0 items-center gap-1 text-ui font-medium text-muted-foreground">
+        <EyeOffIcon className="size-3.5" />
+        {t("campus.anonymous")}
+      </span>
+      <span aria-hidden="true" className="shrink-0 text-muted-foreground/40">
+        ·
+      </span>
+    </>
+  );
+};
+
+/**
  * The author on one line with the time: a 20px avatar in a 20px slot, then the name in
  * medium 13px foreground ink. It is the identity, so it carries the weight; the time after
  * it is muted.
  */
-const CreatorDisplay: React.FC<{ creator: User }> = ({ creator }) => (
-  <>
+const CreatorDisplay: React.FC<{ creator: User }> = ({ creator }) => (  <>
     <Link
       className={cn(
         "flex min-w-0 shrink items-center gap-1.5 rounded-sm text-ui font-medium text-foreground transition-colors hover:text-foreground/80",

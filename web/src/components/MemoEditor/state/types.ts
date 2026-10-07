@@ -16,6 +16,10 @@ export interface EditorState {
     attachments: Attachment[];
     relations: MemoRelation[];
     location?: Location;
+    /** Campus lost-and-found item status (LOST / FOUND / RESOLVED); undefined = ordinary memo. */
+    itemStatus?: string;
+    /** Campus lost-and-found anonymous posting. */
+    isAnonymous: boolean;
   };
   ui: {
     isFocusMode: boolean;
@@ -68,6 +72,8 @@ const defaultState: EditorState = {
     attachments: [],
     relations: [],
     location: undefined,
+    itemStatus: undefined,
+    isAnonymous: false,
   },
   ui: {
     isFocusMode: false,

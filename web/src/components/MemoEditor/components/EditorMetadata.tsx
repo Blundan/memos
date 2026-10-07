@@ -1,4 +1,5 @@
 import type { FC } from "react";
+import CampusEditorFields from "@/components/CampusFound/CampusEditorFields";
 import { AttachmentListEditor, LocationDisplayEditor, RelationListEditor } from "@/components/MemoMetadata";
 import { METADATA_ROW_LIST_CLASSES } from "@/components/MemoMetadata/MetadataSection";
 import { extractManagedAttachmentUIDs } from "@/utils/managed-attachment";
@@ -27,6 +28,8 @@ export const EditorMetadata: FC<EditorMetadataProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-2">
+      <CampusEditorFields />
+
       <AttachmentListEditor
         attachments={attachments}
         localFiles={localFiles}
